@@ -1222,6 +1222,7 @@ nextSub:
 		TempNamer:     defTempNamer,
 		TempLifetime:  time.Duration(m.cfg.Options().KeepTemporariesH) * time.Hour,
 		CurrentFiler:  cFiler{m, folder},
+		MtimeRepo:     newVirtualMtimeRepo(m.db, folderCfg.ID),
 		IgnorePerms:   folderCfg.IgnorePerms,
 		AutoNormalize: folderCfg.AutoNormalize,
 		Hashers:       m.numHashers(folder),

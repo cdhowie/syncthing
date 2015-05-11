@@ -45,6 +45,7 @@ const (
 	KeyTypeBlock
 	KeyTypeDeviceStatistic
 	KeyTypeFolderStatistic
+	KeyTypeVirtualMtime
 )
 
 type fileVersion struct {
