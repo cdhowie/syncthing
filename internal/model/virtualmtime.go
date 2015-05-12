@@ -62,3 +62,7 @@ func (r *virtualMtimeRepo) GetMtime(path string, diskMtime time.Time) time.Time 
 func (r *virtualMtimeRepo) DeleteMtime(path string) {
 	r.ns.Delete(path)
 }
+
+func (r *virtualMtimeRepo) Drop() {
+	r.ns.Reset()
+}

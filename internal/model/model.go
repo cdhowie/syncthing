@@ -1654,6 +1654,7 @@ func (m *Model) ResetFolder(folder string) error {
 		if f == folder {
 			l.Infof("Cleaning data for folder %q", folder)
 			db.DropFolder(m.db, folder)
+			newVirtualMtimeRepo(m.db, folder).Drop()
 			return nil
 		}
 	}

@@ -14,4 +14,5 @@ type VirtualMtimeRepo interface {
 	UpdateMtime(path string, diskMtime, actualMtime time.Time)
 	GetMtime(path string, diskMtime time.Time) time.Time
 	DeleteMtime(path string)
+	Drop()
 }
