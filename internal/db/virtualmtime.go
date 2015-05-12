@@ -13,6 +13,14 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 )
 
+// This type encapsulates a repository of mtimes for platforms where file mtimes
+// can't be set to arbitrary values.  For this to work, we need to store both
+// the mtime we tried to set (the "actual" mtime) as well as the mtime the file
+// has when we're done touching it (the "disk" mtime) so that we can tell if it
+// was changed.  So in GetMtime(), it's not sufficient that the record exists --
+// the argument must also equal the "disk" mtime in the record, otherwise it's
+// been touched locally and the "disk" mtime is actually correct.
+
 type VirtualMtimeRepo struct {
 	ns *NamespacedKV
 }
