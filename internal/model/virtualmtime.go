@@ -7,7 +7,7 @@
 package model
 
 import (
-	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/syncthing/syncthing/internal/db"
@@ -16,11 +16,6 @@ import (
 
 type virtualMtimeRepo struct {
 	ns *db.NamespacedKV
-}
-
-type virtualMtimeRecord struct {
-	DiskMtime   time.Time
-	ActualMtime time.Time
 }
 
 func newVirtualMtimeRepo(ldb *leveldb.DB, folder string) *virtualMtimeRepo {
@@ -32,25 +27,32 @@ func newVirtualMtimeRepo(ldb *leveldb.DB, folder string) *virtualMtimeRepo {
 }
 
 func (r *virtualMtimeRepo) UpdateMtime(path string, diskMtime, actualMtime time.Time) {
-	// TODO need error handling?
-	data, _ := json.Marshal(virtualMtimeRecord{
-		DiskMtime:   diskMtime,
-		ActualMtime: actualMtime,
-	})
+	diskBytes, _ := diskMtime.MarshalBinary()
+	actualBytes, _ := actualMtime.MarshalBinary()
 
-	r.ns.PutString(path, string(data))
+	data := append(diskBytes, actualBytes...)
+
+	r.ns.PutBytes(path, data)
 }
 
 func (r *virtualMtimeRepo) GetMtime(path string, diskMtime time.Time) time.Time {
 	data, exists := r.ns.String(path)
 
 	if exists {
-		record := virtualMtimeRecord{}
+		var mtime time.Time
 
-		err := json.Unmarshal([]byte(data), &record)
+		err := mtime.UnmarshalBinary([]byte(data[:len(data)/2]))
+		if err != nil {
+			panic(fmt.Sprintf("Can't unmarshal stored mtime at path %v: %v", path, err))
+		}
 
-		if err == nil && record.DiskMtime.Equal(diskMtime) {
-			diskMtime = record.ActualMtime
+		if mtime.Equal(diskMtime) {
+			err := mtime.UnmarshalBinary([]byte(data[len(data)/2:]))
+			if err != nil {
+				panic(fmt.Sprintf("Can't unmarshal stored mtime at path %v: %v", path, err))
+			}
+
+			diskMtime = mtime
 		}
 	}
 
