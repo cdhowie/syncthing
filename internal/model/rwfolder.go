@@ -25,7 +25,6 @@ import (
 	"github.com/syncthing/syncthing/internal/symlinks"
 	"github.com/syncthing/syncthing/internal/sync"
 	"github.com/syncthing/syncthing/internal/versioner"
-	"github.com/syncthing/syncthing/internal/virtualmtime"
 )
 
 // TODO: Stop on errors
@@ -60,7 +59,7 @@ type rwFolder struct {
 
 	model            *Model
 	progressEmitter  *ProgressEmitter
-	virtualMtimeRepo virtualmtime.VirtualMtimeRepo
+	virtualMtimeRepo *db.VirtualMtimeRepo
 
 	folder      string
 	dir         string

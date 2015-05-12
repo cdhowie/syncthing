@@ -10,23 +10,22 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/syncthing/syncthing/internal/virtualmtime"
 	"github.com/syndtr/goleveldb/leveldb"
 )
 
-type virtualMtimeRepo struct {
+type VirtualMtimeRepo struct {
 	ns *NamespacedKV
 }
 
-func NewVirtualMtimeRepo(ldb *leveldb.DB, folder string) virtualmtime.VirtualMtimeRepo {
+func NewVirtualMtimeRepo(ldb *leveldb.DB, folder string) *VirtualMtimeRepo {
 	prefix := string(KeyTypeVirtualMtime) + folder
 
-	return &virtualMtimeRepo{
+	return &VirtualMtimeRepo{
 		ns: NewNamespacedKV(ldb, prefix),
 	}
 }
 
-func (r *virtualMtimeRepo) UpdateMtime(path string, diskMtime, actualMtime time.Time) {
+func (r *VirtualMtimeRepo) UpdateMtime(path string, diskMtime, actualMtime time.Time) {
 	if debug {
 		l.Debugf("virtual mtime: storing values for path:%v disk:%v actual:%v", path, diskMtime, actualMtime)
 	}
@@ -39,7 +38,7 @@ func (r *virtualMtimeRepo) UpdateMtime(path string, diskMtime, actualMtime time.
 	r.ns.PutBytes(path, data)
 }
 
-func (r *virtualMtimeRepo) GetMtime(path string, diskMtime time.Time) time.Time {
+func (r *VirtualMtimeRepo) GetMtime(path string, diskMtime time.Time) time.Time {
 	var debugResult string
 
 	if data, exists := r.ns.Bytes(path); exists {
@@ -70,10 +69,10 @@ func (r *virtualMtimeRepo) GetMtime(path string, diskMtime time.Time) time.Time 
 	return diskMtime
 }
 
-func (r *virtualMtimeRepo) DeleteMtime(path string) {
+func (r *VirtualMtimeRepo) DeleteMtime(path string) {
 	r.ns.Delete(path)
 }
 
-func (r *virtualMtimeRepo) Drop() {
+func (r *VirtualMtimeRepo) Drop() {
 	r.ns.Reset()
 }
