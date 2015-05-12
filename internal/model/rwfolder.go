@@ -876,7 +876,8 @@ func (p *rwFolder) shortcutFile(file protocol.FileInfo) (err error) {
 	err = os.Chtimes(realName, t, t)
 	if err != nil {
 		// Try using virtual mtimes
-		info, err := os.Stat(realName)
+		info, errStat := os.Stat(realName)
+		err = errStat
 
 		if err == nil {
 			p.virtualMtimeRepo.UpdateMtime(file.Name, info.ModTime(), t)
