@@ -53,7 +53,7 @@ type Walker struct {
 	TempLifetime time.Duration
 	// If CurrentFiler is not nil, it is queried for the current file before rescanning.
 	CurrentFiler CurrentFiler
-	// If MtimeRepo is not nil, it is used to provide mtimes on systems that don't support arbirtary mtimes.
+	// If MtimeRepo is not nil, it is used to provide mtimes on systems that don't support setting arbirtary mtimes.
 	MtimeRepo virtualmtime.VirtualMtimeRepo
 	// If IgnorePerms is true, changes to permission bits will not be
 	// detected. Scanned files will get zero permission bits and the
