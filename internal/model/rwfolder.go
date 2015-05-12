@@ -873,12 +873,13 @@ func (p *rwFolder) shortcutFile(file protocol.FileInfo) error {
 	t := time.Unix(file.Modified, 0)
 	if err := os.Chtimes(realName, t, t); err != nil {
 		// Try using virtual mtimes
-		if info, err := os.Stat(realName); err != nil {
+		info, err := os.Stat(realName)
+		if err != nil {
 			l.Infof("Puller (folder %q, file %q): shortcut: unable to stat file: %v", p.folder, file.Name, err)
 			return err
-		} else {
-			p.virtualMtimeRepo.UpdateMtime(file.Name, info.ModTime(), t)
 		}
+
+		p.virtualMtimeRepo.UpdateMtime(file.Name, info.ModTime(), t)
 	}
 
 	// This may have been a conflict. We should merge the version vectors so
