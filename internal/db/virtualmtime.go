@@ -1,32 +1,36 @@
-// Copyright (C) 2014 The Syncthing Authors.
+// Copyright (C) 2015 The Syncthing Authors.
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // You can obtain one at http://mozilla.org/MPL/2.0/.
 
-package model
+package db
 
 import (
 	"fmt"
 	"time"
 
-	"github.com/syncthing/syncthing/internal/db"
+	"github.com/syncthing/syncthing/internal/virtualmtime"
 	"github.com/syndtr/goleveldb/leveldb"
 )
 
 type virtualMtimeRepo struct {
-	ns *db.NamespacedKV
+	ns *NamespacedKV
 }
 
-func newVirtualMtimeRepo(ldb *leveldb.DB, folder string) *virtualMtimeRepo {
-	prefix := string(db.KeyTypeVirtualMtime) + folder
+func NewVirtualMtimeRepo(ldb *leveldb.DB, folder string) virtualmtime.VirtualMtimeRepo {
+	prefix := string(KeyTypeVirtualMtime) + folder
 
 	return &virtualMtimeRepo{
-		ns: db.NewNamespacedKV(ldb, prefix),
+		ns: NewNamespacedKV(ldb, prefix),
 	}
 }
 
 func (r *virtualMtimeRepo) UpdateMtime(path string, diskMtime, actualMtime time.Time) {
+	if debug {
+		l.Debugf("virtual mtime: storing values for path:%v disk:%v actual:%v", path, diskMtime, actualMtime)
+	}
+
 	diskBytes, _ := diskMtime.MarshalBinary()
 	actualBytes, _ := actualMtime.MarshalBinary()
 
@@ -36,6 +40,8 @@ func (r *virtualMtimeRepo) UpdateMtime(path string, diskMtime, actualMtime time.
 }
 
 func (r *virtualMtimeRepo) GetMtime(path string, diskMtime time.Time) time.Time {
+	var debugResult string
+
 	data, exists := r.ns.String(path)
 
 	if exists {
@@ -52,8 +58,17 @@ func (r *virtualMtimeRepo) GetMtime(path string, diskMtime time.Time) time.Time 
 				panic(fmt.Sprintf("Can't unmarshal stored mtime at path %v: %v", path, err))
 			}
 
+			debugResult = "got it"
 			diskMtime = mtime
+		} else {
+			debugResult = fmt.Sprintf("record exists, but mismatch inDisk:%v dbDisk:%v", diskMtime, mtime)
 		}
+	} else {
+		debugResult = "record does not exist"
+	}
+
+	if debug {
+		l.Debugf("virtual mtime: value get result:%v path:%v", debugResult, path)
 	}
 
 	return diskMtime

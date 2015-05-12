@@ -25,6 +25,7 @@ import (
 	"github.com/syncthing/syncthing/internal/symlinks"
 	"github.com/syncthing/syncthing/internal/sync"
 	"github.com/syncthing/syncthing/internal/versioner"
+	"github.com/syncthing/syncthing/internal/virtualmtime"
 )
 
 // TODO: Stop on errors
@@ -59,7 +60,7 @@ type rwFolder struct {
 
 	model            *Model
 	progressEmitter  *ProgressEmitter
-	virtualMtimeRepo *virtualMtimeRepo
+	virtualMtimeRepo virtualmtime.VirtualMtimeRepo
 
 	folder      string
 	dir         string
@@ -89,7 +90,7 @@ func newRWFolder(m *Model, shortID uint64, cfg config.FolderConfiguration) *rwFo
 
 		model:            m,
 		progressEmitter:  m.progressEmitter,
-		virtualMtimeRepo: newVirtualMtimeRepo(m.db, cfg.ID),
+		virtualMtimeRepo: db.NewVirtualMtimeRepo(m.db, cfg.ID),
 
 		folder:      cfg.ID,
 		dir:         cfg.Path(),
