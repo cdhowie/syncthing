@@ -45,14 +45,12 @@ func (r *virtualMtimeRepo) GetMtime(path string, diskMtime time.Time) time.Time 
 	if data, exists := r.ns.Bytes(path); exists {
 		var mtime time.Time
 
-		err := mtime.UnmarshalBinary(data[:len(data)/2])
-		if err != nil {
+		if err := mtime.UnmarshalBinary(data[:len(data)/2]); err != nil {
 			panic(fmt.Sprintf("Can't unmarshal stored mtime at path %v: %v", path, err))
 		}
 
 		if mtime.Equal(diskMtime) {
-			err := mtime.UnmarshalBinary(data[len(data)/2:])
-			if err != nil {
+			if err := mtime.UnmarshalBinary(data[len(data)/2:]); err != nil {
 				panic(fmt.Sprintf("Can't unmarshal stored mtime at path %v: %v", path, err))
 			}
 
