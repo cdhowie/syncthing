@@ -867,7 +867,7 @@ func (p *rwFolder) shortcutFile(file protocol.FileInfo) (err error) {
 	if !p.ignorePerms {
 		err = os.Chmod(realName, os.FileMode(file.Flags&0777))
 		if err != nil {
-			l.Infof("Puller (folder %q, file %q): shortcut: %v", p.folder, file.Name, err)
+			l.Infof("Puller (folder %q, file %q): shortcut: chmod: %v", p.folder, file.Name, err)
 			return
 		}
 	}
@@ -875,15 +875,14 @@ func (p *rwFolder) shortcutFile(file protocol.FileInfo) (err error) {
 	t := time.Unix(file.Modified, 0)
 	err = os.Chtimes(realName, t, t)
 	if err != nil {
-		err = nil
-
 		// Try using virtual mtimes
-		info, errStat := os.Stat(realName)
+		info, err := os.Stat(realName)
 
-		if errStat == nil {
+		if err == nil {
 			p.virtualMtimeRepo.UpdateMtime(file.Name, info.ModTime(), t)
 		} else {
-			l.Infof("Puller (folder %q, file %q): shortcut: unable to stat file, it may have been deleted -- we'll get it next time: %v", p.folder, file.Name, errStat)
+			l.Infof("Puller (folder %q, file %q): shortcut: unable to stat file: %v", p.folder, file.Name, err)
+			return
 		}
 	}
 
@@ -1079,12 +1078,12 @@ func (p *rwFolder) performFinish(state *sharedPullerState) {
 	err = os.Chtimes(state.tempName, t, t)
 	if err != nil {
 		// First try using virtual mtimes
-		info, errStat := os.Stat(state.tempName)
+		info, err := os.Stat(state.tempName)
 
-		if errStat == nil {
+		if err == nil {
 			p.virtualMtimeRepo.UpdateMtime(state.file.Name, info.ModTime(), t)
 		} else {
-			l.Infof("Puller (folder %q, file %q): final: unable to stat file, it may have been deleted -- we'll get it next time: %v", p.folder, state.file.Name, errStat)
+			l.Infof("Puller (folder %q, file %q): final: unable to stat file: %v", p.folder, state.file.Name, err)
 		}
 	}
 
