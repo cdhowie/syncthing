@@ -61,16 +61,15 @@ type rwFolder struct {
 	progressEmitter  *ProgressEmitter
 	virtualMtimeRepo *virtualMtimeRepo
 
-	folder        string
-	dir           string
-	scanIntv      time.Duration
-	versioner     versioner.Versioner
-	ignorePerms   bool
-	lenientMtimes bool
-	copiers       int
-	pullers       int
-	shortID       uint64
-	order         config.PullOrder
+	folder      string
+	dir         string
+	scanIntv    time.Duration
+	versioner   versioner.Versioner
+	ignorePerms bool
+	copiers     int
+	pullers     int
+	shortID     uint64
+	order       config.PullOrder
 
 	stop        chan struct{}
 	queue       *jobQueue
@@ -92,15 +91,14 @@ func newRWFolder(m *Model, shortID uint64, cfg config.FolderConfiguration) *rwFo
 		progressEmitter:  m.progressEmitter,
 		virtualMtimeRepo: newVirtualMtimeRepo(m.db, cfg.ID),
 
-		folder:        cfg.ID,
-		dir:           cfg.Path(),
-		scanIntv:      time.Duration(cfg.RescanIntervalS) * time.Second,
-		ignorePerms:   cfg.IgnorePerms,
-		lenientMtimes: cfg.LenientMtimes,
-		copiers:       cfg.Copiers,
-		pullers:       cfg.Pullers,
-		shortID:       shortID,
-		order:         cfg.Order,
+		folder:      cfg.ID,
+		dir:         cfg.Path(),
+		scanIntv:    time.Duration(cfg.RescanIntervalS) * time.Second,
+		ignorePerms: cfg.IgnorePerms,
+		copiers:     cfg.Copiers,
+		pullers:     cfg.Pullers,
+		shortID:     shortID,
+		order:       cfg.Order,
 
 		stop:        make(chan struct{}),
 		queue:       newJobQueue(),
@@ -876,26 +874,15 @@ func (p *rwFolder) shortcutFile(file protocol.FileInfo) (err error) {
 	t := time.Unix(file.Modified, 0)
 	err = os.Chtimes(realName, t, t)
 	if err != nil {
-		// First try using virtual mtimes
+		err = nil
+
+		// Try using virtual mtimes
 		info, errStat := os.Stat(realName)
 
 		if errStat == nil {
-			err = nil
 			p.virtualMtimeRepo.UpdateMtime(file.Name, info.ModTime(), t)
 		} else {
-			l.Infof("Puller (folder %q, file %q): shortcut: unable to stat file: %v", p.folder, file.Name, errStat)
-
-			if p.lenientMtimes {
-				err = nil
-				// We accept the failure with a warning here and allow the sync to
-				// continue. We'll sync the new mtime back to the other devices later.
-				// If they have the same problem & setting, we might never get in
-				// sync.
-				l.Infof("Puller (folder %q, file %q): shortcut: %v (continuing anyway as requested)", p.folder, file.Name, err)
-			} else {
-				l.Infof("Puller (folder %q, file %q): shortcut: %v", p.folder, file.Name, err)
-				return
-			}
+			l.Infof("Puller (folder %q, file %q): shortcut: unable to stat file, it may have been deleted -- we'll get it next time: %v", p.folder, file.Name, errStat)
 		}
 	}
 
@@ -1096,18 +1083,7 @@ func (p *rwFolder) performFinish(state *sharedPullerState) {
 		if errStat == nil {
 			p.virtualMtimeRepo.UpdateMtime(state.file.Name, info.ModTime(), t)
 		} else {
-			l.Infof("Puller (folder %q, file %q): final: unable to stat file: %v", p.folder, state.file.Name, errStat)
-
-			if p.lenientMtimes {
-				// We accept the failure with a warning here and allow the sync to
-				// continue. We'll sync the new mtime back to the other devices later.
-				// If they have the same problem & setting, we might never get in
-				// sync.
-				l.Infof("Puller (folder %q, file %q): final: %v (continuing anyway as requested)", p.folder, state.file.Name, err)
-			} else {
-				l.Warnln("Puller: final:", err)
-				return
-			}
+			l.Infof("Puller (folder %q, file %q): final: unable to stat file, it may have been deleted -- we'll get it next time: %v", p.folder, state.file.Name, errStat)
 		}
 	}
 

@@ -163,10 +163,6 @@ func (m *Model) StartFolderRW(folder string) {
 		p.versioner = factory(folder, cfg.Path(), cfg.Versioning.Params)
 	}
 
-	if cfg.LenientMtimes {
-		l.Infof("Folder %q is running with LenientMtimes workaround. Syncing may not work properly.", folder)
-	}
-
 	go p.Serve()
 }
 
