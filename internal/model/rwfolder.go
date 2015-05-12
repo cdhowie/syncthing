@@ -861,29 +861,26 @@ func (p *rwFolder) handleFile(file protocol.FileInfo, copyChan chan<- copyBlocks
 
 // shortcutFile sets file mode and modification time, when that's the only
 // thing that has changed.
-func (p *rwFolder) shortcutFile(file protocol.FileInfo) (err error) {
+func (p *rwFolder) shortcutFile(file protocol.FileInfo) error {
 	realName := filepath.Join(p.dir, file.Name)
 	if !p.ignorePerms {
-		err = os.Chmod(realName, os.FileMode(file.Flags&0777))
-		if err != nil {
+		if err := os.Chmod(realName, os.FileMode(file.Flags&0777)); err != nil {
 			l.Infof("Puller (folder %q, file %q): shortcut: chmod: %v", p.folder, file.Name, err)
-			return
+			return err
 		}
 	}
 
 	t := time.Unix(file.Modified, 0)
-	err = os.Chtimes(realName, t, t)
-	if err != nil {
+	if err := os.Chtimes(realName, t, t); err != nil {
 		// Try using virtual mtimes
-		info, errStat := os.Stat(realName)
-		err = errStat
+		info, err := os.Stat(realName)
 
-		if err == nil {
-			p.virtualMtimeRepo.UpdateMtime(file.Name, info.ModTime(), t)
-		} else {
+		if err != nil {
 			l.Infof("Puller (folder %q, file %q): shortcut: unable to stat file: %v", p.folder, file.Name, err)
-			return
+			return err
 		}
+
+		p.virtualMtimeRepo.UpdateMtime(file.Name, info.ModTime(), t)
 	}
 
 	// This may have been a conflict. We should merge the version vectors so
@@ -893,7 +890,7 @@ func (p *rwFolder) shortcutFile(file protocol.FileInfo) (err error) {
 	}
 
 	p.dbUpdates <- file
-	return
+	return nil
 }
 
 // shortcutSymlink changes the symlinks type if necessary.
