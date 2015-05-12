@@ -58,7 +58,7 @@ func (r *virtualMtimeRepo) GetMtime(path string, diskMtime time.Time) time.Time 
 
 			debugResult = "got it"
 			diskMtime = mtime
-		} else {
+		} else if debug {
 			debugResult = fmt.Sprintf("record exists, but mismatch inDisk:%v dbDisk:%v", diskMtime, mtime)
 		}
 	} else {
