@@ -118,7 +118,7 @@ func (n *NamespacedKV) PutBytes(key string, val []byte) {
 	n.db.Put(keyBs, val, nil)
 }
 
-// Bytes returns the stored value as a raw byte slyce and a boolean that
+// Bytes returns the stored value as a raw byte slice and a boolean that
 // is false if no value was stored at the key.
 func (n NamespacedKV) Bytes(key string) ([]byte, bool) {
 	keyBs := append(n.prefix, []byte(key)...)

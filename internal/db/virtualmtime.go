@@ -35,7 +35,7 @@ func NewVirtualMtimeRepo(ldb *leveldb.DB, folder string) *VirtualMtimeRepo {
 
 func (r *VirtualMtimeRepo) UpdateMtime(path string, diskMtime, actualMtime time.Time) {
 	if debug {
-		l.Debugf("virtual mtime: storing values for path:%v disk:%v actual:%v", path, diskMtime, actualMtime)
+		l.Debugf("virtual mtime: storing values for path:%s disk:%v actual:%v", path, diskMtime, actualMtime)
 	}
 
 	diskBytes, _ := diskMtime.MarshalBinary()
@@ -71,7 +71,7 @@ func (r *VirtualMtimeRepo) GetMtime(path string, diskMtime time.Time) time.Time 
 	}
 
 	if debug {
-		l.Debugf("virtual mtime: value get result:%v path:%v", debugResult, path)
+		l.Debugf("virtual mtime: value get result:%v path:%s", debugResult, path)
 	}
 
 	return diskMtime
